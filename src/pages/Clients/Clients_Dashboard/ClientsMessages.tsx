@@ -1,11 +1,11 @@
-// pages/Clients/ClientsMessages.tsx
-
-import { Routes, Route } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import PageMeta from "../../../components/common/PageMeta";
 import ClientsMessagesInbox from "./ClientsMessagesInbox";
 import ClientChatRoom from "./ClientChatRoom";
 
 const ClientsMessages = () => {
+    const { chatId } = useParams();
+
     return (
         <>
             <PageMeta
@@ -13,10 +13,7 @@ const ClientsMessages = () => {
                 description="Communicate and collaborate with freelancers through messages on Red."
             />
 
-            <Routes>
-                <Route index element={<ClientsMessagesInbox />} />
-                <Route path=":chatId" element={<ClientChatRoom />} />
-            </Routes>
+            {chatId ? <ClientChatRoom /> : <ClientsMessagesInbox />}
         </>
     );
 };

@@ -3,10 +3,6 @@ import {
     collection,
     getDocs,
     addDoc,
-    doc,
-    getDoc,
-    setDoc,
-    serverTimestamp,
 } from "firebase/firestore";
 import { db, auth } from "../../../firebase/firebaseConfig";
 import dayjs from "dayjs";
@@ -14,6 +10,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import PageMeta from "../../../components/common/PageMeta";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { createOrGetChat } from "../../../utils/firebase/createOrGetChat";
 
 dayjs.extend(relativeTime);
 
@@ -38,37 +35,25 @@ const BrowseJob = () => {
         if (!freelancer) return toast.error("Please sign in.");
 
         try {
-            // Step 1: Save application
+            // Optional: Save application
             await addDoc(collection(db, "jobs", job.id, "applications"), {
                 freelancerId: freelancer.uid,
                 appliedAt: new Date(),
             });
 
-            // Step 2: Create chat room ID and ref
-            const chatId = `${freelancer.uid}_${job.clientId}_${job.id}`;
-            const chatRef = doc(db, "chats", chatId);
-
-            const chatSnap = await getDoc(chatRef);
-            if (!chatSnap.exists()) {
-                // Step 3: Create chat room
-                await setDoc(chatRef, {
-                    participants: [freelancer.uid, job.clientId],
-                    jobId: job.id,
-                    createdAt: serverTimestamp(),
-                });
-
-                // Step 4: Send job preview message
-                await addDoc(collection(chatRef, "messages"), {
-                    senderId: freelancer.uid,
-                    content: `💼 Applying for job: ${job.title}\n💬 ${job.description}`,
-                    type: "job-preview",
-                    jobId: job.id,
-                    createdAt: serverTimestamp(),
-                });
-            }
+            // Create or get chat room
+            const chatId = await createOrGetChat({
+                clientId: job.clientId,
+                freelancerId: freelancer.uid,
+                job: {
+                    id: job.id,
+                    title: job.title,
+                    budget: job.budget,
+                },
+            });
 
             toast.success("Applied and chat started!");
-            navigate(`/freelancers/messages/${chatId}`);
+            navigate(`/freelancer/messages/${chatId}`);
         } catch (error) {
             console.error("❌ Apply error:", error);
             toast.error("Failed to apply or start chat.");
@@ -86,8 +71,7 @@ const BrowseJob = () => {
                             <h2 className="text-xl font-semibold">{job.title}</h2>
                             <p className="text-gray-700 my-2">{job.description}</p>
                             <p className="text-sm text-gray-600">
-                                Budget: ₦{job.budget} • Posted{" "}
-                                {dayjs(job.createdAt?.toDate()).fromNow()}
+                                Budget: ₦{job.budget} • Posted {dayjs(job.createdAt?.toDate()).fromNow()}
                             </p>
                             <button
                                 onClick={() => handleApply(job)}

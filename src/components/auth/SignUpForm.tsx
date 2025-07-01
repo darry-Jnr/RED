@@ -12,7 +12,7 @@ import {
   sendEmailVerification,
   signInWithPopup,
 } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 export default function SignUpForm() {
   const navigate = useNavigate();
@@ -29,7 +29,6 @@ export default function SignUpForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const { fname, lname, email, password, phone } = formData;
     const newErrors: Record<string, string> = {};
 
@@ -54,7 +53,7 @@ export default function SignUpForm() {
         email,
         phone,
         role: "client",
-        bio: "", // default empty, user will add later
+        bio: "",
         createdAt: new Date(),
       });
 
@@ -63,7 +62,11 @@ export default function SignUpForm() {
       navigate("/verify-email");
     } catch (error: any) {
       console.error("Signup Error:", error.message);
-      toast.error("Signup failed: " + error.message);
+      if (error.code === "auth/email-already-in-use") {
+        toast.error("Email already in use. Please sign in instead.");
+      } else {
+        toast.error("Signup failed: " + error.message);
+      }
     }
   };
 
@@ -72,20 +75,24 @@ export default function SignUpForm() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      await setDoc(doc(db, "users", user.uid), {
-        firstName: user.displayName?.split(" ")[0] || "",
-        lastName: user.displayName?.split(" ")[1] || "",
-        email: user.email,
-        phone: "", // default empty, user can edit in profile
-        bio: "",
-        role: "client",
-        createdAt: new Date(),
-      });
+      const userRef = doc(db, "users", user.uid);
+      const existing = await getDoc(userRef);
 
-      toast.success("Signed up with Google!");
+      if (!existing.exists()) {
+        await setDoc(userRef, {
+          firstName: user.displayName?.split(" ")[0] || "",
+          lastName: user.displayName?.split(" ")[1] || "",
+          email: user.email,
+          phone: "",
+          bio: "",
+          role: "client",
+          createdAt: new Date(),
+        });
+      }
+
+      toast.success("Signed in with Google!");
       navigate("/verify-email");
     } catch (error: any) {
-      console.error("Google Sign-In Error:", error.message);
       toast.error("Google sign-in failed: " + error.message);
     }
   };

@@ -21,39 +21,45 @@ export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
 
   const handleValidation = () => {
-    const newErrors = {};
+    const newErrors: Record<string, string> = {};
     if (!formData.email) newErrors.email = "Please enter your email.";
     if (!formData.password) newErrors.password = "Please enter your password.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const redirectByRole = async (uid: string) => {
-    const clientSnap = await getDoc(doc(db, "users", uid));
-    const freelancerSnap = await getDoc(doc(db, "freelancers", uid));
+  const handleRedirect = async (uid: string, email: string) => {
+    const clientRef = doc(db, "users", uid);
+    const freelancerRef = doc(db, "freelancers", uid);
 
-    if (clientSnap.exists()) {
+    const [clientSnap, freelancerSnap] = await Promise.all([
+      getDoc(clientRef),
+      getDoc(freelancerRef),
+    ]);
+
+    localStorage.setItem("uid", uid);
+    localStorage.setItem("email", email);
+
+    if (clientSnap.exists() && freelancerSnap.exists()) {
+      return navigate("/choose-dashboard");
+    } else if (clientSnap.exists()) {
       localStorage.setItem("role", "client");
-      localStorage.setItem("uid", uid);
-      localStorage.setItem("email", clientSnap.data().email);
       toast.success("Logged in as Client");
-      navigate("/client");
+      return navigate("/clients");
     } else if (freelancerSnap.exists()) {
       localStorage.setItem("role", "freelancer");
-      localStorage.setItem("uid", uid);
-      localStorage.setItem("email", freelancerSnap.data().email);
       toast.success("Logged in as Freelancer");
-      navigate("/freelancer");
+      return navigate("/freelancer");
     } else {
-      toast.error("User role not found. Please contact support.");
+      toast.error("No matching account found. Please sign up.");
     }
   };
 
-  const handleEmailSignIn = async (e) => {
+  const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!handleValidation()) return;
 
@@ -65,22 +71,32 @@ export default function SignInForm() {
       );
       const user = result.user;
 
-      // Check if email is verified
       if (!user.emailVerified) {
         toast.error("Please verify your email before logging in.");
         return;
       }
 
-      await redirectByRole(user.uid);
-    } catch (error) {
-      let msg = "Login failed";
+      await handleRedirect(user.uid, user.email || "");
+    } catch (error: any) {
       const err = error.code;
+      let msg = "Login failed";
+      const newErrors: Record<string, string> = {};
 
-      if (err === "auth/user-not-found") msg = "No account found with this email.";
-      else if (err === "auth/wrong-password") msg = "Incorrect password.";
-      else if (err === "auth/invalid-email") msg = "Invalid email address.";
-      else if (err === "auth/too-many-requests") msg = "Too many login attempts. Try again later.";
+      if (err === "auth/user-not-found") {
+        msg = "No account found with this email.";
+        newErrors.email = msg;
+      } else if (err === "auth/wrong-password") {
+        msg = "Incorrect password.";
+        newErrors.password = msg;
+      } else if (err === "auth/invalid-email") {
+        msg = "Invalid email address.";
+        newErrors.email = msg;
+      } else if (err === "auth/too-many-requests") {
+        msg = "Too many login attempts. Try again later.";
+        newErrors.password = msg;
+      }
 
+      setErrors(newErrors);
       toast.error(msg);
     }
   };
@@ -90,25 +106,8 @@ export default function SignInForm() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      const clientDoc = await getDoc(doc(db, "users", user.uid));
-      const freelancerDoc = await getDoc(doc(db, "freelancers", user.uid));
-
-      if (clientDoc.exists()) {
-        localStorage.setItem("role", "client");
-        localStorage.setItem("uid", user.uid);
-        localStorage.setItem("email", user.email);
-        toast.success("Signed in as Client");
-        navigate("/client");
-      } else if (freelancerDoc.exists()) {
-        localStorage.setItem("role", "freelancer");
-        localStorage.setItem("uid", user.uid);
-        localStorage.setItem("email", user.email);
-        toast.success("Signed in as Freelancer");
-        navigate("/freelancer");
-      } else {
-        toast.error("Google account not registered. Please sign up first.");
-      }
-    } catch (error) {
+      await handleRedirect(user.uid, user.email || "");
+    } catch (error: any) {
       toast.error("Google Sign-In Error: " + error.message);
     }
   };

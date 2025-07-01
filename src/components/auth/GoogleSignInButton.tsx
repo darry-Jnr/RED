@@ -1,6 +1,6 @@
-import { signInWithPopup } from "firebase/auth";
+import { signInWithPopup, signOut } from "firebase/auth";
 import { auth, db, googleProvider } from "../../firebase/firebaseConfig";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
@@ -11,38 +11,42 @@ export default function GoogleSignInButton() {
         try {
             const result = await signInWithPopup(auth, googleProvider);
             const user = result.user;
-
             const uid = user.uid;
+
             const clientRef = doc(db, "users", uid);
             const freelancerRef = doc(db, "freelancers", uid);
 
-            const clientSnap = await getDoc(clientRef);
-            const freelancerSnap = await getDoc(freelancerRef);
+            const [clientSnap, freelancerSnap] = await Promise.all([
+                getDoc(clientRef),
+                getDoc(freelancerRef),
+            ]);
 
-            // Already exists as a client
-            if (clientSnap.exists()) {
-                toast.success("Signed in as client!");
-                return navigate("/client");
+            localStorage.setItem("uid", uid);
+            localStorage.setItem("email", user.email || "");
+
+            const isClient = clientSnap.exists();
+            const isFreelancer = freelancerSnap.exists();
+
+            if (isClient && isFreelancer) {
+                toast.success("Account found for both roles.");
+                return navigate("/choose-dashboard");
             }
 
-            // Already exists as a freelancer
-            if (freelancerSnap.exists()) {
+            if (isClient) {
+                localStorage.setItem("role", "client");
+                toast.success("Signed in as client!");
+                return navigate("/clients");
+            }
+
+            if (isFreelancer) {
+                localStorage.setItem("role", "freelancer");
                 toast.success("Signed in as freelancer!");
                 return navigate("/freelancer");
             }
 
-            // First-time user, defaulting to client
-            await setDoc(clientRef, {
-                firstName: user.displayName?.split(" ")[0] || "",
-                lastName: user.displayName?.split(" ")[1] || "",
-                email: user.email,
-                role: "client",
-                provider: "google",
-                createdAt: new Date(),
-            });
-
-            toast.success("Google sign-up successful!");
-            navigate("/client");
+            // No account found
+            toast.error("No account found. Please sign up first.");
+            await signOut(auth);
 
         } catch (error: any) {
             console.error("Google Sign-In Error:", error.message);

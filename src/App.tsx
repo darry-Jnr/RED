@@ -15,21 +15,22 @@ import Calendar from "./pages/Freelancers/Calendar";
 import AppLayout from "./layout/Freelancer/AppLayout";
 import Home from "./pages/Freelancers/Dashboard/Home";
 import BrowseJob from "./pages/Freelancers/Dashboard/BrowseJob";
-import Messages from "./pages/Freelancers/Dashboard/Messages";
+import Messages from "./pages/Freelancers/Dashboard/Messages"; // Handles inbox + chatroom for Freelancer
 import LandingLayout from "./layout/LandingLayout";
-import MessagesInbox from "./pages/Freelancers/Dashboard/MessagesInbox";
+import ChooseDashboard from "./pages/ChooseDashboard";
+
 // Clients Pages
 import ClientsLayout from "./layout/clients/ClientsLayout";
 import ClientsHome from "./pages/Clients/Clients_Dashboard/Home";
 import ClientsProfile from "./pages/Clients/Clients_Dashboard/ClientsProfile";
-import ClientMessages from "./pages/Clients/Clients_Dashboard/ClientsMessages";
+import ClientMessages from "./pages/Clients/Clients_Dashboard/ClientsMessages"; // ChatRoom for Client
+import ClientsMessagesInbox from "./pages/Clients/Clients_Dashboard/ClientsMessagesInbox"; // Inbox for Client
 import Myjobs from "./pages/Clients/Clients_Dashboard/Myjobs";
 import PostJob from "./pages/Clients/Clients_Dashboard/PostJob";
 import CSignUp from "./pages/Clients/AuthPages/SignUp";
 import JobPaymentWrapper from "./pages/Clients/Clients_Dashboard/JobPaymentWrapper";
 import PaymentSuccess from "./pages/Clients/Clients_Dashboard/PaymentSuccess";
 import EditJob from "./pages/Clients/Clients_Dashboard/EditJob";
-import ClientsMessagesInbox from "./pages/Clients/Clients_Dashboard/ClientsMessagesInbox";
 
 // Utilities
 import { ScrollToTop } from "./components/common/ScrollToTop";
@@ -44,8 +45,11 @@ export default function App() {
         {/* 🌟 Landing Page */}
         <Route path="/" element={<LandingLayout />} />
 
-        {/* 🌟 Choose Role Page */}
+        {/* 🌟 Choose Role Pages */}
         <Route path="/choose-role" element={<ChooseRole />} />
+        <Route path="/choose-dashboard" element={<ChooseDashboard />} />
+
+        {/* Edit Job */}
         <Route path="/clients/edit-job/:id" element={<EditJob />} />
 
         {/* 🔐 Auth Routes */}
@@ -54,7 +58,7 @@ export default function App() {
         <Route path="/clients/signup" element={<CSignUp />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
 
-        {/* ✅ FIXED: Client Payment Route (Outside Nest) */}
+        {/* ✅ Client Payment Routes */}
         <Route
           path="/clients/payment/:jobId"
           element={
@@ -63,7 +67,6 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/clients/payment-success"
           element={
@@ -84,8 +87,9 @@ export default function App() {
         >
           <Route index element={<Home />} />
           <Route path="browse-job" element={<BrowseJob />} />
-          <Route path="messages" element={<ClientsMessagesInbox />} />
-          <Route path="messages/:chatId" element={<ClientMessages />} />
+
+          {/* Freelancer Messages (Inbox + ChatRoom handled inside Messages) */}
+          <Route path="messages/*" element={<Messages />} />
 
           <Route path="profile" element={<UserProfiles />} />
           <Route path="calendar" element={<Calendar />} />
@@ -100,12 +104,13 @@ export default function App() {
             </ProtectedRoute>
           }
         >
-
           <Route index element={<ClientsHome />} />
           <Route path="post-job" element={<PostJob />} />
           <Route path="my-jobs" element={<Myjobs />} />
-          <Route path="messages" element={<MessagesInbox />} />
-          <Route path="messages/:chatId" element={<Messages />} />
+
+          {/* Client Messages */}
+          <Route path="messages" element={<ClientsMessagesInbox />} />
+          <Route path="messages/:chatId/*" element={<ClientMessages />} />
 
           <Route path="client-profile" element={<ClientsProfile />} />
         </Route>
