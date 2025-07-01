@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { auth } from "../../firebase/firebaseConfig";
 import { sendEmailVerification } from "firebase/auth";
 import toast from "react-hot-toast";
