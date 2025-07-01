@@ -26,7 +26,7 @@ export default function UserAddressCard() {
     taxId: "",
   });
 
-  // Wait for Firebase Auth to load current user
+  // Load current user and address data
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(getAuth(), async (firebaseUser) => {
       if (firebaseUser) {
@@ -37,11 +37,12 @@ export default function UserAddressCard() {
 
         if (docSnap.exists()) {
           const data = docSnap.data();
+
           setFormData({
-            country: data.country || "",
-            cityState: data.cityState || "",
-            postalCode: data.postalCode || "",
-            taxId: data.taxId || "",
+            country: data?.country ?? "",
+            cityState: data?.cityState ?? "",
+            postalCode: data?.postalCode ?? "",
+            taxId: data?.taxId ?? "",
           });
         }
       }
@@ -51,17 +52,26 @@ export default function UserAddressCard() {
     return () => unsubscribe();
   }, []);
 
+  // Handle input changes with type safety
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const name = e.target.name as keyof AddressData;
+    const value = e.target.value;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
+  // Save updated address to Firestore
   const handleSave = async () => {
     if (!user) return;
 
     const userRef = doc(db, "users", user.uid);
-    await updateDoc(userRef, formData);
 
-    // After save, update UI
+    // Cast to 'any' to satisfy Firestore updateDoc typing
+    await updateDoc(userRef, formData as any);
+
     closeModal();
   };
 
