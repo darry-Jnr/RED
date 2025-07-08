@@ -18,6 +18,7 @@ import BrowseJob from "./pages/Freelancers/Dashboard/BrowseJob";
 import Messages from "./pages/Freelancers/Dashboard/Messages"; // Handles inbox + chatroom for Freelancer
 import LandingLayout from "./layout/LandingLayout";
 import ChooseDashboard from "./pages/ChooseDashboard";
+import AccountSettingsPage from "./pages/AccountSettingsPage";
 
 // Clients Pages
 import ClientsLayout from "./layout/clients/ClientsLayout";
@@ -57,7 +58,7 @@ export default function App() {
         <Route path="/freelancer/signup" element={<SignUp />} />
         <Route path="/clients/signup" element={<CSignUp />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
-
+        <Route path="/account-settings" element={<AccountSettingsPage />} />
         {/* ✅ Client Payment Routes */}
         <Route
           path="/clients/payment/:jobId"

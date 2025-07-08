@@ -1,4 +1,3 @@
-// utils/firebase/createOrGetChat.ts
 import {
     collection,
     addDoc,
@@ -25,21 +24,24 @@ export const createOrGetChat = async ({
 }) => {
     const chatsRef = collection(db, "chats");
 
-    // Step 1: Check for existing chat
+    // Step 1: Check for existing chat that includes both participants
     const q = query(chatsRef, where("participants", "array-contains", freelancerId));
     const snapshot = await getDocs(q);
 
     for (const docSnap of snapshot.docs) {
         const data = docSnap.data();
         if (data.participants.includes(clientId)) {
-            return docSnap.id; // Existing chat
+            return docSnap.id; // Existing chat found
         }
     }
 
-    // Step 2: Create new chat
+    // Step 2: Create new chat document with jobId included
     const newChat = await addDoc(chatsRef, {
         participants: [clientId, freelancerId],
         createdAt: serverTimestamp(),
+        jobId: job.id,         // <-- Add jobId here
+        jobTitle: job.title,   // Optional: for convenience
+        jobBudget: job.budget, // Optional: for convenience
     });
 
     // Step 3: Send job preview message as first message
