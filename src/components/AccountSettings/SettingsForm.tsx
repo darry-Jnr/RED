@@ -3,7 +3,6 @@ import { auth, db } from "../../firebase/firebaseConfig";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 
-// ✅ Define the shape of formData
 interface FormData {
     fullName: string;
     email: string;
@@ -13,23 +12,20 @@ interface FormData {
 
 export default function SettingsForm() {
     const [user] = useAuthState(auth);
-
-    // ✅ Explicitly type useState
     const [formData, setFormData] = useState<FormData>({
         fullName: "",
         email: "",
         phone: "",
         bio: "",
     });
-
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const fetchUserInfo = async () => {
             if (!user) return;
 
-            const role = localStorage.getItem("role"); // 'clients' or 'freelancers'
-            const docRef = doc(db, role!, user.uid);
+            const role = localStorage.getItem("role") || "clients"; // ✅ fallback
+            const docRef = doc(db, role, user.uid); // ✅ safe
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
@@ -56,8 +52,8 @@ export default function SettingsForm() {
 
         try {
             setLoading(true);
-            const role = localStorage.getItem("role");
-            const docRef = doc(db, role!, user.uid);
+            const role = localStorage.getItem("role") || "clients"; // ✅ fallback
+            const docRef = doc(db, role, user.uid); // ✅ safe
             await updateDoc(docRef, formData);
             alert("Account info updated!");
         } catch (error) {
