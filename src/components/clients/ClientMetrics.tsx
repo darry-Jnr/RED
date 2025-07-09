@@ -92,7 +92,7 @@ const MetricCard = ({
     value,
     badgeColor = "success",
 }: {
-    icon: JSX.Element;
+    icon: React.ReactNode;
     label: string;
     value: string | number;
     badgeColor?: "success" | "error" | "warning" | "info";

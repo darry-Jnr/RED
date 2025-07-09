@@ -11,10 +11,17 @@ import {
 import { auth, db } from "../../../firebase/firebaseConfig";
 import PageMeta from "../../../components/common/PageMeta";
 
+// ✅ Optional type for Chat
+interface Chat {
+    id: string;
+    participants: string[];
+    jobId?: string;
+    [key: string]: any;
+}
+
 const ClientsMessagesInbox = () => {
-    const [chats, setChats] = useState<any[]>([]);
+    const [chats, setChats] = useState<Chat[]>([]);
     const [userNames, setUserNames] = useState<{ [id: string]: string }>({});
-    const [unreadCounts, setUnreadCounts] = useState<{ [chatId: string]: number }>({});
     const userId = auth.currentUser?.uid;
 
     useEffect(() => {
@@ -25,41 +32,27 @@ const ClientsMessagesInbox = () => {
                 collection(db, "chats"),
                 where("participants", "array-contains", userId)
             );
+
             const querySnapshot = await getDocs(q);
-            const chatList = querySnapshot.docs.map((doc) => ({
+            const chatList: Chat[] = querySnapshot.docs.map((doc) => ({
                 id: doc.id,
                 ...doc.data(),
             }));
+
             setChats(chatList);
 
             for (const chat of chatList) {
-                const otherId = chat.participants.find((id: string) => id !== userId);
-
+                const otherId = chat.participants.find((id) => id !== userId);
                 if (otherId && !userNames[otherId]) {
                     const userSnap = await getDoc(doc(db, "users", otherId));
                     if (userSnap.exists()) {
                         const data = userSnap.data();
                         setUserNames((prev) => ({
                             ...prev,
-                            [otherId]: data.firstName || "User",
+                            [otherId]: data.fullName || "User",
                         }));
                     }
                 }
-
-                // 🔍 Count unread messages
-                const messagesSnapshot = await getDocs(
-                    collection(db, "chats", chat.id, "messages")
-                );
-                const unread = messagesSnapshot.docs.filter(
-                    (msg) =>
-                        msg.data().senderId !== userId &&
-                        !msg.data().readBy?.includes(userId)
-                ).length;
-
-                setUnreadCounts((prev) => ({
-                    ...prev,
-                    [chat.id]: unread,
-                }));
             }
         };
 
@@ -68,7 +61,10 @@ const ClientsMessagesInbox = () => {
 
     return (
         <>
-            <PageMeta title="Messages" description="View your conversations with freelancers." />
+            <PageMeta
+                title="Messages"
+                description="View your conversations with freelancers."
+            />
             <div className="p-6">
                 <h1 className="text-xl font-semibold mb-4">Your Chats</h1>
                 <ul className="space-y-3">
@@ -77,21 +73,13 @@ const ClientsMessagesInbox = () => {
                         const otherId = chat.participants.find(
                             (id: string) => id !== userId
                         );
-                        const name = userNames[otherId] || "Loading...";
-                        const unread = unreadCounts[chat.id] || 0;
-
                         return (
                             <li key={chat.id}>
                                 <Link
                                     to={`/clients/messages/${chat.id}`}
-                                    className="flex justify-between items-center p-4 rounded-lg shadow bg-white hover:bg-gray-100"
+                                    className="block p-4 rounded-lg shadow bg-white hover:bg-gray-100"
                                 >
-                                    <span>Chat with: {name}</span>
-                                    {unread > 0 && (
-                                        <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                                            {unread}
-                                        </span>
-                                    )}
+                                    Chat with: {userNames[otherId || ""] || "Loading..."}
                                 </Link>
                             </li>
                         );

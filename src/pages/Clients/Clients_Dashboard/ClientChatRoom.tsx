@@ -48,14 +48,8 @@ const ClientChatRoom = () => {
 
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-    // ✅ Fetch chat partner and job info
     useEffect(() => {
-        console.log("✅ chatId from URL:", chatId);
-
-        if (!chatId || !userId) {
-            console.warn("⛔ Missing chatId or userId");
-            return;
-        }
+        if (!chatId || !userId) return;
 
         const fetchMeta = async () => {
             try {
@@ -89,7 +83,6 @@ const ClientChatRoom = () => {
         fetchMeta();
     }, [chatId, userId]);
 
-    // ✅ Realtime messages
     useEffect(() => {
         if (!chatId || !userId) return;
 
@@ -98,10 +91,10 @@ const ClientChatRoom = () => {
             orderBy("timestamp", "asc")
         );
 
-        const unsub = onSnapshot(q, snapshot => {
+        const unsub = onSnapshot(q, (snapshot) => {
             const msgs: Message[] = [];
-            snapshot.forEach(docSnap =>
-                msgs.push({ id: docSnap.id, ...(docSnap.data() as Message) })
+            snapshot.forEach((docSnap) =>
+                msgs.push({ ...(docSnap.data() as Omit<Message, "id">), id: docSnap.id })
             );
             setMessages(msgs);
             scrollToBottom();
@@ -140,7 +133,6 @@ const ClientChatRoom = () => {
         setEditing(false);
     };
 
-    // ✅ Pay button - triggers Paystack & updates Firestore
     const handlePayment = async () => {
         if (!chatId || budget === null) return;
 
@@ -148,10 +140,7 @@ const ClientChatRoom = () => {
             const chatSnap = await getDoc(doc(db, "chats", chatId));
             const chatData = chatSnap.data();
             const jobId = chatData?.jobId;
-            if (!jobId) {
-                console.warn("⚠️ No jobId in chat");
-                return;
-            }
+            if (!jobId) return;
 
             payWithPaystack(budget, async (reference) => {
                 const jobRef = doc(db, "jobs", jobId);
@@ -263,7 +252,7 @@ const ClientChatRoom = () => {
                                     })}
                                 </span>
                                 {msg.senderId === userId && (
-                                    <FaCheckDouble className={`text-xs ${msg.readBy?.length > 1 ? "text-white" : "text-gray-300"}`} />
+                                    <FaCheckDouble className={`text-xs ${(msg.readBy?.length || 0) > 1 ? "text-white" : "text-gray-300"}`} />
                                 )}
                             </div>
                         </div>
@@ -280,9 +269,12 @@ const ClientChatRoom = () => {
                         placeholder="Type your message..."
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                        onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                            if (e.key === "Enter") handleSend();
+                        }}
                         className="flex-1"
                     />
+
                     <Button onClick={handleSend}>Send</Button>
                 </div>
             </div>
