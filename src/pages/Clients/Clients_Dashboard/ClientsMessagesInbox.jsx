@@ -11,17 +11,9 @@ import {
 import { auth, db } from "../../../firebase/firebaseConfig";
 import PageMeta from "../../../components/common/PageMeta";
 
-// ✅ Optional type for Chat
-interface Chat {
-    id: string;
-    participants: string[];
-    jobId?: string;
-    [key: string]: any;
-}
-
 const ClientsMessagesInbox = () => {
-    const [chats, setChats] = useState<Chat[]>([]);
-    const [userNames, setUserNames] = useState<{ [id: string]: string }>({});
+    const [chats, setChats] = useState([]);
+    const [userNames, setUserNames] = useState({});
     const userId = auth.currentUser?.uid;
 
     useEffect(() => {
@@ -34,7 +26,7 @@ const ClientsMessagesInbox = () => {
             );
 
             const querySnapshot = await getDocs(q);
-            const chatList: Chat[] = querySnapshot.docs.map((doc) => ({
+            const chatList = querySnapshot.docs.map((doc) => ({
                 id: doc.id,
                 ...doc.data(),
             }));
@@ -71,7 +63,7 @@ const ClientsMessagesInbox = () => {
                     {chats.length === 0 && <p>No messages yet.</p>}
                     {chats.map((chat) => {
                         const otherId = chat.participants.find(
-                            (id: string) => id !== userId
+                            (id) => id !== userId
                         );
                         return (
                             <li key={chat.id}>

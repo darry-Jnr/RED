@@ -25,28 +25,20 @@ import {
     FaMoneyBillWave,
 } from "react-icons/fa";
 
-interface Message {
-    id: string;
-    senderId: string;
-    text?: string;
-    timestamp: any;
-    readBy?: string[];
-}
-
 const ClientChatRoom = () => {
     const { chatId } = useParams();
     const userId = auth.currentUser?.uid;
 
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
-    const [chatPartner, setChatPartner] = useState<{ fullName: string; photoURL?: string } | null>(null);
-    const [budget, setBudget] = useState<number | null>(null);
+    const [chatPartner, setChatPartner] = useState(null);
+    const [budget, setBudget] = useState(null);
     const [isPaid, setIsPaid] = useState(false);
     const [showBudgetMenu, setShowBudgetMenu] = useState(false);
     const [editing, setEditing] = useState(false);
-    const [editValue, setEditValue] = useState<string>("");
+    const [editValue, setEditValue] = useState("");
 
-    const messagesEndRef = useRef<HTMLDivElement | null>(null);
+    const messagesEndRef = useRef(null);
 
     useEffect(() => {
         if (!chatId || !userId) return;
@@ -54,7 +46,7 @@ const ClientChatRoom = () => {
         const fetchMeta = async () => {
             try {
                 const chatSnap = await getDoc(doc(db, "chats", chatId));
-                const chatData: any = chatSnap.data();
+                const chatData = chatSnap.data();
                 if (!chatData) return;
 
                 const { clientId, freelancerId, jobId } = chatData;
@@ -92,9 +84,9 @@ const ClientChatRoom = () => {
         );
 
         const unsub = onSnapshot(q, (snapshot) => {
-            const msgs: Message[] = [];
+            const msgs = [];
             snapshot.forEach((docSnap) =>
-                msgs.push({ ...(docSnap.data() as Omit<Message, "id">), id: docSnap.id })
+                msgs.push({ ...docSnap.data(), id: docSnap.id })
             );
             setMessages(msgs);
             scrollToBottom();
@@ -165,7 +157,6 @@ const ClientChatRoom = () => {
         <>
             <PageMeta title="Chat Room" description="Chat with freelancer or client." />
             <div className="flex flex-col h-[90vh] max-w-3xl mx-auto bg-white shadow-lg rounded-lg">
-                {/* Chat Header */}
                 <div className="flex items-center justify-between p-4 border-b bg-white sticky top-0 z-10">
                     <div className="flex items-center gap-3">
                         <FaArrowLeft
@@ -184,8 +175,6 @@ const ClientChatRoom = () => {
                             <p className="text-sm text-green-500">Online</p>
                         </div>
                     </div>
-
-                    {/* Budget Display */}
                     <div className="relative">
                         {editing ? (
                             <div className="flex gap-1 items-center">
@@ -233,7 +222,6 @@ const ClientChatRoom = () => {
                     </div>
                 </div>
 
-                {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 bg-[#f9f9f9] space-y-3">
                     {messages.map((msg) => (
                         <div
@@ -260,7 +248,6 @@ const ClientChatRoom = () => {
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* Input */}
                 <div className="flex items-center gap-2 border-t p-4 bg-white relative">
                     <button className="text-gray-600 p-2 hover:bg-gray-100 rounded-full">
                         <FaPlus />
@@ -269,12 +256,11 @@ const ClientChatRoom = () => {
                         placeholder="Type your message..."
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                        onKeyDown={(e) => {
                             if (e.key === "Enter") handleSend();
                         }}
                         className="flex-1"
                     />
-
                     <Button onClick={handleSend}>Send</Button>
                 </div>
             </div>

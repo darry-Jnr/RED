@@ -3,16 +3,9 @@ import { auth, db } from "../../firebase/firebaseConfig";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 
-interface FormData {
-    fullName: string;
-    email: string;
-    phone: string;
-    bio: string;
-}
-
 export default function SettingsForm() {
     const [user] = useAuthState(auth);
-    const [formData, setFormData] = useState<FormData>({
+    const [formData, setFormData] = useState({
         fullName: "",
         email: "",
         phone: "",
@@ -24,8 +17,8 @@ export default function SettingsForm() {
         const fetchUserInfo = async () => {
             if (!user) return;
 
-            const role = localStorage.getItem("role") || "clients"; // ✅ fallback
-            const docRef = doc(db, role, user.uid); // ✅ safe
+            const role = localStorage.getItem("role") || "clients";
+            const docRef = doc(db, role, user.uid);
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
@@ -42,18 +35,18 @@ export default function SettingsForm() {
         fetchUserInfo();
     }, [user]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChange = (e) => {
         setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!user) return;
 
         try {
             setLoading(true);
-            const role = localStorage.getItem("role") || "clients"; // ✅ fallback
-            const docRef = doc(db, role, user.uid); // ✅ safe
+            const role = localStorage.getItem("role") || "clients";
+            const docRef = doc(db, role, user.uid);
             await updateDoc(docRef, formData);
             alert("Account info updated!");
         } catch (error) {
