@@ -1,9 +1,11 @@
-import EcommerceMetrics from "../../../components/ecommerce/EcommerceMetrics";
-import MonthlySalesChart from "../../../components/ecommerce/MonthlySalesChart";
-import StatisticsChart from "../../../components/ecommerce/StatisticsChart";
-import MonthlyTarget from "../../../components/ecommerce/MonthlyTarget";
-import RecentOrders from "../../../components/ecommerce/RecentOrders";
-import DemographicCard from "../../../components/ecommerce/DemographicCard";
+
+import FreelancerStats from "../../../components/freelancer/FreelancerStats";
+import MonthlyEarningsChart from "../../../components/freelancer/MonthlyEarningsChart";
+import FreelancerNewsSection from "../../../components/freelancer/FreelancerNewsSection";
+import MotivationCarousel from "../../../components/freelancer/MotivationCarousel";
+import EarningsThisMonthCard from "../../../components/freelancer/EarningsThisMonthCard";
+import RecentProjects from "../../../components/freelancer/RecentProjects";
+
 import PageMeta from "../../../components/common/PageMeta";
 
 export default function Home() {
@@ -16,25 +18,25 @@ export default function Home() {
 
       <div className="grid grid-cols-12 gap-4 md:gap-6">
         <div className="col-span-12 space-y-6 xl:col-span-7">
-          <EcommerceMetrics />
+          <FreelancerStats />
 
-          <MonthlySalesChart />
+          <MonthlyEarningsChart />
         </div>
 
         <div className="col-span-12 xl:col-span-5">
-          <MonthlyTarget />
+          <FreelancerNewsSection />
         </div>
 
         <div className="col-span-12">
-          <StatisticsChart />
+          <MotivationCarousel />
         </div>
 
         <div className="col-span-12 xl:col-span-5">
-          <DemographicCard />
+          <EarningsThisMonthCard />
         </div>
 
         <div className="col-span-12 xl:col-span-7">
-          <RecentOrders />
+          <RecentProjects />
         </div>
       </div>
     </>

@@ -1,11 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  signInWithEmailAndPassword,
-  signInWithPopup,
-} from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { auth, db, provider } from "../../firebase/firebaseConfig";
+import { auth, db } from "../../firebase/firebaseConfig";
 import { toast } from "react-hot-toast";
 import {
   ChevronLeftIcon,
@@ -83,8 +80,14 @@ export default function SignInForm() {
       const newErrors: Record<string, string> = {};
 
       if (err === "auth/user-not-found") {
-        msg = "No account found with this email.";
-        newErrors.email = msg;
+        msg = "No account found with this email. Redirecting to Sign Up...";
+        newErrors.email = "Redirecting to sign up...";
+        toast.error(msg);
+        setErrors(newErrors);
+        setTimeout(() => {
+          navigate("/choose-role"); // 👈 update to your sign-up route if different
+        }, 2000);
+        return;
       } else if (err === "auth/wrong-password") {
         msg = "Incorrect password.";
         newErrors.password = msg;
@@ -98,17 +101,6 @@ export default function SignInForm() {
 
       setErrors(newErrors);
       toast.error(msg);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      await handleRedirect(user.uid, user.email || "");
-    } catch (error: any) {
-      toast.error("Google Sign-In Error: " + error.message);
     }
   };
 
@@ -132,33 +124,6 @@ export default function SignInForm() {
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Enter your email and password to sign in!
           </p>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 my-4">
-            <button
-              onClick={handleGoogleSignIn}
-              className="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 bg-gray-100 rounded-lg px-7 hover:bg-gray-200 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10"
-            >
-              <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
-                <path
-                  fill="#4285F4"
-                  d="M18.75 10.19c0-.72-.06-1.24-.18-1.78H10.18v3.25h4.92c-.1.81-.65 2-1.87 2.83l2.66 2.03c1.55-1.43 2.34-3.54 2.34-6.33z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M10.18 18.75c2.41 0 4.43-.8 5.91-2.13l-2.82-2.13c-.8.53-1.86.89-3.09.89-2.37 0-4.38-1.61-5.1-3.76H2.24v2.17A8.57 8.57 0 0 0 10.18 18.75z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.09 11.73a5.6 5.6 0 0 1 0-3.46V6.09H2.29A8.57 8.57 0 0 0 1.25 10c0 1.42.35 2.76 1.04 3.91l2.8-2.18z"
-                />
-                <path
-                  fill="#EB4335"
-                  d="M10.18 4.63c1.31 0 2.47.45 3.4 1.34l2.54-2.54C14.61 1.99 12.6 1.25 10.18 1.25c-3.49 0-6.49 1.98-7.94 4.84l2.85 2.19c.72-2.09 2.75-3.65 5.09-3.65z"
-                />
-              </svg>
-              Sign in with Google
-            </button>
-          </div>
 
           <form onSubmit={handleEmailSignIn}>
             <div className="space-y-6">

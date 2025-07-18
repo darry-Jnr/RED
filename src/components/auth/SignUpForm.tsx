@@ -70,32 +70,6 @@ export default function SignUpForm() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      const userRef = doc(db, "users", user.uid);
-      const existing = await getDoc(userRef);
-
-      if (!existing.exists()) {
-        await setDoc(userRef, {
-          firstName: user.displayName?.split(" ")[0] || "",
-          lastName: user.displayName?.split(" ")[1] || "",
-          email: user.email,
-          phone: "",
-          bio: "",
-          role: "client",
-          createdAt: new Date(),
-        });
-      }
-
-      toast.success("Signed in with Google!");
-      navigate("/verify-email");
-    } catch (error: any) {
-      toast.error("Google sign-in failed: " + error.message);
-    }
-  };
 
   return (
     <div className="w-full max-w-md mx-auto px-4 py-8">
@@ -107,14 +81,7 @@ export default function SignUpForm() {
       <h1 className="text-2xl font-semibold mb-2">Sign Up</h1>
       <p className="text-sm text-gray-500 mb-6">Enter your details to sign up!</p>
 
-      <button
-        type="button"
-        onClick={handleGoogleSignIn}
-        className="w-full bg-white border border-gray-300 text-gray-700 py-2 rounded mb-6 flex items-center justify-center gap-2"
-      >
-        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
-        Sign up with Google
-      </button>
+
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid grid-cols-2 gap-4">

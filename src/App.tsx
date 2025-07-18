@@ -36,7 +36,22 @@ import EditJob from "./pages/Clients/Clients_Dashboard/EditJob";
 // Utilities
 import { ScrollToTop } from "./components/common/ScrollToTop";
 
+import { useEffect } from "react";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { setupUserPresence } from "./utils/firebase/setUserOnline";
+
 export default function App() {
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setupUserPresence(user.uid);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   return (
     <Router>
       <ScrollToTop />
@@ -122,3 +137,4 @@ export default function App() {
     </Router>
   );
 }
+
