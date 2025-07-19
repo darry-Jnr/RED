@@ -12,6 +12,9 @@ import {
     setDoc,
     deleteDoc,
 } from "firebase/firestore";
+import EscrowFreelancer from "../../../components/Escrow/EscrowFreelancer";
+import { getDoc } from "firebase/firestore";
+
 import { auth, db } from "../../../firebase/firebaseConfig";
 import PageMeta from "../../../components/common/PageMeta";
 import { FaArrowLeft } from "react-icons/fa";
@@ -46,6 +49,29 @@ const FreelancerChatRoom = () => {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const typingTimeout = useRef<NodeJS.Timeout | null>(null);
     const otherUserIdRef = useRef<string | null>(null);
+    const [jobId, setJobId] = useState(null);
+
+    useEffect(() => {
+        const fetchChatData = async () => {
+            if (!chatId) return;
+
+            try {
+                const chatRef = doc(db, "chats", chatId);
+                const chatSnap = await getDoc(chatRef);
+
+                if (chatSnap.exists()) {
+                    const chatData = chatSnap.data();
+                    setJobId(chatData.jobId || null); // 👈 Set jobId for EscrowFreelancer
+                } else {
+                    console.error("Chat document not found.");
+                }
+            } catch (error) {
+                console.error("❌ Error fetching chat metadata:", error);
+            }
+        };
+
+        fetchChatData();
+    }, [chatId]);
 
     useEffect(() => {
         if (!chatId || !userId) return;
@@ -186,6 +212,13 @@ const FreelancerChatRoom = () => {
                                     : "Offline"}
                         </p>
                     </div>
+
+                    {jobId && (
+                        <div className="ml-auto">
+                            <EscrowFreelancer jobId={jobId} />
+                        </div>
+                    )}
+
                 </div>
 
                 <div className="flex-1 overflow-y-auto mb-4 bg-white rounded p-4 space-y-3 border border-gray-200">
@@ -193,8 +226,8 @@ const FreelancerChatRoom = () => {
                         <div
                             key={msg.id}
                             className={`max-w-[70%] px-4 py-2 rounded-lg ${msg.senderId === userId
-                                    ? "bg-blue-500 text-white self-end ml-auto"
-                                    : "bg-gray-100 text-gray-800 self-start mr-auto"
+                                ? "bg-blue-500 text-white self-end ml-auto"
+                                : "bg-gray-100 text-gray-800 self-start mr-auto"
                                 }`}
                         >
                             <p>{msg.text}</p>

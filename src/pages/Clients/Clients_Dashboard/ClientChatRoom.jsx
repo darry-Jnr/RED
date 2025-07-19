@@ -7,24 +7,16 @@ import {
     serverTimestamp,
     query,
     orderBy,
-    updateDoc,
     doc,
     getDoc,
 } from "firebase/firestore";
+
 import { auth, db } from "../../../firebase/firebaseConfig";
 import PageMeta from "../../../components/common/PageMeta";
 import Button from "../../../components/ui/button/Button";
 import Input from "../../../components/form/input/InputField";
-import { payWithPaystack } from "../../../utils/paystack";
-import {
-    FaArrowLeft,
-    FaPlus,
-    FaCheckDouble,
-    FaEllipsisV,
-    FaEdit,
-    FaMoneyBillWave,
-} from "react-icons/fa";
-
+import { FaArrowLeft, FaPlus, FaCheckDouble } from "react-icons/fa";
+import EscrowClient from "../../../components/Escrow/EscrowClient";
 const ClientChatRoom = () => {
     const { chatId } = useParams();
     const userId = auth.currentUser?.uid;
@@ -32,13 +24,36 @@ const ClientChatRoom = () => {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
     const [chatPartner, setChatPartner] = useState(null);
-    const [budget, setBudget] = useState(null);
-    const [isPaid, setIsPaid] = useState(false);
-    const [showBudgetMenu, setShowBudgetMenu] = useState(false);
-    const [editing, setEditing] = useState(false);
-    const [editValue, setEditValue] = useState("");
-
+    const [jobData, setJobData] = useState(null);
     const messagesEndRef = useRef(null);
+    const [jobId, setJobId] = useState(null);
+    useEffect(() => {
+        const fetchChatData = async () => {
+            if (!chatId) return;
+
+            try {
+                const chatRef = doc(db, "chats", chatId);
+                const chatSnap = await getDoc(chatRef);
+
+                if (chatSnap.exists()) {
+                    const chatData = chatSnap.data();
+                    setJobId(chatData.jobId || null); // 👈 This sets the jobId
+                } else {
+                    console.error("Chat document not found.");
+                }
+            } catch (error) {
+                console.error("❌ Error fetching chat metadata:", error);
+            }
+        };
+
+        fetchChatData();
+    }, [chatId]);
+
+    // DEBUG LOGS
+    useEffect(() => {
+        console.log("👀 Current Chat ID:", chatId);
+        console.log("🧑 User ID:", userId);
+    }, [chatId, userId]);
 
     useEffect(() => {
         if (!chatId || !userId) return;
@@ -47,6 +62,7 @@ const ClientChatRoom = () => {
             try {
                 const chatSnap = await getDoc(doc(db, "chats", chatId));
                 const chatData = chatSnap.data();
+
                 if (!chatData) return;
 
                 const { clientId, freelancerId, jobId } = chatData;
@@ -63,9 +79,9 @@ const ClientChatRoom = () => {
 
                 const jobSnap = await getDoc(doc(db, "jobs", jobId));
                 if (jobSnap.exists()) {
-                    const jd = jobSnap.data();
-                    setBudget(jd?.budget ?? null);
-                    setIsPaid(jd?.isPaid ?? false);
+                    const jd = { ...jobSnap.data(), id: jobId };
+                    setJobData(jd);
+                    console.log("📦 Job Data Loaded:", jd);
                 }
             } catch (err) {
                 console.error("❌ Error fetching chat metadata:", err);
@@ -113,115 +129,48 @@ const ClientChatRoom = () => {
         scrollToBottom();
     };
 
-    const openBudgetEdit = () => {
-        setEditing(true);
-        setShowBudgetMenu(false);
-        setEditValue((budget || "").toString());
-    };
-
-    const saveBudget = () => {
-        if (!editValue.trim()) return;
-        setBudget(parseFloat(editValue));
-        setEditing(false);
-    };
-
-    const handlePayment = async () => {
-        if (!chatId || budget === null) return;
-
-        try {
-            const chatSnap = await getDoc(doc(db, "chats", chatId));
-            const chatData = chatSnap.data();
-            const jobId = chatData?.jobId;
-            if (!jobId) return;
-
-            payWithPaystack(budget, async (reference) => {
-                const jobRef = doc(db, "jobs", jobId);
-                await updateDoc(jobRef, {
-                    isPaid: true,
-                    budget,
-                    escrowAmount: budget,
-                    paystackRef: reference,
-                    updatedAt: new Date(),
-                });
-
-                setIsPaid(true);
-                setShowBudgetMenu(false);
-                console.log("✅ Escrow payment successful");
-            });
-        } catch (err) {
-            console.error("❌ handlePayment error:", err);
-        }
-    };
-
     return (
         <>
             <PageMeta title="Chat Room" description="Chat with freelancer or client." />
-            <div className="flex flex-col h-[90vh] max-w-3xl mx-auto bg-white shadow-lg rounded-lg">
+
+            <div className="flex flex-col h-[90vh] mx-auto bg-white shadow rounded-lg">
+                {/* HEADER */}
                 <div className="flex items-center justify-between p-4 border-b bg-white sticky top-0 z-10">
+                    {/* Left: Partner Info */}
                     <div className="flex items-center gap-3">
                         <FaArrowLeft
                             className="text-xl text-gray-700 cursor-pointer"
                             onClick={() => window.history.back()}
                         />
                         {chatPartner?.photoURL ? (
-                            <img src={chatPartner.photoURL} alt="User" className="w-9 h-9 rounded-full object-cover" />
+                            <img
+                                src={chatPartner.photoURL}
+                                alt="User"
+                                className="w-9 h-9 rounded-full object-cover"
+                            />
                         ) : (
                             <div className="w-9 h-9 rounded-full bg-gray-300 flex items-center justify-center text-white text-sm">
                                 {chatPartner?.fullName?.[0] || "?"}
                             </div>
                         )}
                         <div>
-                            <p className="font-medium text-gray-900">{chatPartner?.fullName}</p>
+                            <p className="font-medium text-gray-900">
+                                {chatPartner?.fullName}
+                            </p>
                             <p className="text-sm text-green-500">Online</p>
                         </div>
                     </div>
-                    <div className="relative">
-                        {editing ? (
-                            <div className="flex gap-1 items-center">
-                                <input
-                                    type="number"
-                                    value={editValue}
-                                    onChange={(e) => setEditValue(e.target.value)}
-                                    className="w-20 px-2 py-1 border rounded text-sm"
-                                />
-                                <button onClick={saveBudget} className="text-green-600 text-sm">Enter</button>
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-2">
-                                <span className={`font-medium ${isPaid ? "text-green-600" : "text-gray-500"}`}>
-                                    ₦{budget ?? "--"}
-                                </span>
-                                <button onClick={() => setShowBudgetMenu(!showBudgetMenu)}>
-                                    <FaEllipsisV className="text-gray-600 hover:text-gray-800" />
-                                </button>
-                            </div>
-                        )}
 
-                        {showBudgetMenu && !editing && (
-                            <div className="absolute right-0 mt-2 w-36 bg-white border rounded shadow z-50">
-                                {!budget && (
-                                    <button onClick={openBudgetEdit} className="flex items-center w-full px-4 py-2 hover:bg-gray-100 gap-2">
-                                        <FaEdit /> Set Budget
-                                    </button>
-                                )}
-                                {budget && !isPaid && (
-                                    <>
-                                        <button onClick={openBudgetEdit} className="flex items-center w-full px-4 py-2 hover:bg-gray-100 gap-2">
-                                            <FaEdit /> Edit Budget
-                                        </button>
-                                        <button onClick={handlePayment} className="flex items-center w-full px-4 py-2 hover:bg-gray-100 gap-2">
-                                            <FaMoneyBillWave /> Pay
-                                        </button>
-                                    </>
-                                )}
-                                {isPaid && (
-                                    <div className="px-4 py-2 text-green-600">Paid ✅</div>
-                                )}
-                            </div>
-                        )}
-                    </div>
+                    {/* Right: Escrow Client Logic */}
+                    {jobId && (
+                        <div className="ml-auto">
+                            <EscrowClient jobId={jobId} />
+                        </div>
+                    )}
+
                 </div>
 
+                {/* CHAT MESSAGES */}
                 <div className="flex-1 overflow-y-auto p-4 bg-[#f9f9f9] space-y-3">
                     {messages.map((msg) => (
                         <div
@@ -240,7 +189,12 @@ const ClientChatRoom = () => {
                                     })}
                                 </span>
                                 {msg.senderId === userId && (
-                                    <FaCheckDouble className={`text-xs ${(msg.readBy?.length || 0) > 1 ? "text-white" : "text-gray-300"}`} />
+                                    <FaCheckDouble
+                                        className={`text-xs ${(msg.readBy?.length || 0) > 1
+                                            ? "text-white"
+                                            : "text-gray-300"
+                                            }`}
+                                    />
                                 )}
                             </div>
                         </div>
@@ -248,7 +202,8 @@ const ClientChatRoom = () => {
                     <div ref={messagesEndRef} />
                 </div>
 
-                <div className="flex items-center gap-2 border-t p-4 bg-white relative">
+                {/* MESSAGE INPUT */}
+                <div className="flex items-center gap-2 border-t p-4 bg-white">
                     <button className="text-gray-600 p-2 hover:bg-gray-100 rounded-full">
                         <FaPlus />
                     </button>

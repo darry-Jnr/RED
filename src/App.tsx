@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import ChooseRole from "./pages/ChooseRole";
-
+import EscrowPage from "./components/Escrow/EscrowPage";
 // 🔐 Protected Route
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import VerifyEmail from "./components/auth/VerifyEmail";
@@ -129,6 +129,8 @@ export default function App() {
           <Route path="messages/:chatId/*" element={<ClientMessages />} />
 
           <Route path="client-profile" element={<ClientsProfile />} />
+
+          <Route path="escrow/:jobId" element={<EscrowPage />} />
         </Route>
 
         {/* 🚫 Not Found */}

@@ -68,7 +68,7 @@ const ClientsMessagesInbox = () => {
     return (
         <>
             <PageMeta title="Messages" description="View your conversations with freelancers." />
-            <div className="p-6">
+            <div className="">
                 <h1 className="text-xl font-semibold mb-4">Your Chats</h1>
 
                 {chats.length === 0 ? (
