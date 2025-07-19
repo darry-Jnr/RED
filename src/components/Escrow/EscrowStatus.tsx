@@ -1,18 +1,15 @@
 import React from "react";
 import EscrowClient from "./EscrowClient";
 import EscrowFreelancer from "./EscrowFreelancer";
+
 type Props = {
     userId: string;
-    clientId: string;
-    freelancerId: string;
     jobId: string;
     isClient: boolean;
 };
 
 const EscrowStatus: React.FC<Props> = ({
     userId,
-    clientId,
-    freelancerId,
     jobId,
     isClient,
 }) => {

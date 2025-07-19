@@ -1,9 +1,15 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebaseConfig";
 import { toast } from "react-toastify";
 
-const EscrowFreelancer = ({ jobId }) => {
+// Define prop types
+type Props = {
+    userId: string;
+    jobId: string;
+};
+
+const EscrowFreelancer: React.FC<Props> = ({ jobId }) => {
     const [budget, setBudget] = useState("");
     const [paid, setPaid] = useState(false);
 

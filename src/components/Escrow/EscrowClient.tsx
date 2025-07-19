@@ -7,7 +7,13 @@ import { MdOutlinePayment } from "react-icons/md";
 import { FaCheckCircle } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 
-const EscrowClient = ({ userId, jobId }) => {
+// ✅ Define props
+type Props = {
+    userId: string;
+    jobId: string;
+};
+
+const EscrowClient: React.FC<Props> = ({ jobId }) => {
     const [budget, setBudget] = useState("");
     const [paid, setPaid] = useState(false);
     const [editing, setEditing] = useState(false);

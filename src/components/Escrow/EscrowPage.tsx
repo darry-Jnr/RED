@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import { MdArrowBack } from "react-icons/md";
 
 const EscrowPage = () => {
-    const { jobId } = useParams();
+    const { jobId } = useParams<{ jobId: string }>();
     const navigate = useNavigate();
     const [budget, setBudget] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
@@ -15,8 +15,9 @@ const EscrowPage = () => {
     useEffect(() => {
         const fetchJob = async () => {
             try {
-                const jobRef = doc(db, "jobs", jobId);
+                const jobRef = doc(db, "jobs", jobId!); // jobId is definitely defined
                 const jobSnap = await getDoc(jobRef);
+
                 if (jobSnap.exists()) {
                     const jobData = jobSnap.data();
                     if (jobData.budget) {
@@ -58,7 +59,9 @@ const EscrowPage = () => {
         });
     };
 
-    if (loading) return <p className="text-center mt-10 text-gray-600">Loading job details...</p>;
+    if (loading) {
+        return <p className="text-center mt-10 text-gray-600">Loading job details...</p>;
+    }
 
     return (
         <div className="max-w-xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-6">

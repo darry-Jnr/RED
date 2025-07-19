@@ -6,13 +6,13 @@ import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import toast from "react-hot-toast";
 
-import { auth, db, provider } from "../../firebase/firebaseConfig";
+import { auth, db } from "../../firebase/firebaseConfig";
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
-  signInWithPopup,
+
 } from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function SignUpForm() {
   const navigate = useNavigate();

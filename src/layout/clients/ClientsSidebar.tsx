@@ -10,7 +10,6 @@ import {
     ChevronDownIcon,
     GridIcon,
     HorizontaLDots,
-    PlugInIcon,
     UserCircleIcon,
 
 } from "../../icons";

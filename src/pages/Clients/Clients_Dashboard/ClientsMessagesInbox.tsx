@@ -7,14 +7,34 @@ import {
     where,
     doc,
     getDoc,
-    orderBy,
+    DocumentData,
 } from "firebase/firestore";
 import { auth, db } from "../../../firebase/firebaseConfig";
 import PageMeta from "../../../components/common/PageMeta";
+import { formatDistanceToNow } from "date-fns";
+
+interface ChatItem {
+    id: string;
+    otherUserId: string;
+    lastMessage: {
+        text?: string;
+        timestamp?: {
+            toDate: () => Date;
+        };
+    } | null;
+    updatedAt: Date | null;
+}
+
+interface UserInfos {
+    [key: string]: {
+        name: string;
+        avatar: string | null;
+    };
+}
 
 const ClientsMessagesInbox = () => {
-    const [chats, setChats] = useState([]);
-    const [userInfos, setUserInfos] = useState({});
+    const [chats, setChats] = useState<ChatItem[]>([]);
+    const [userInfos, setUserInfos] = useState<UserInfos>({});
     const userId = auth.currentUser?.uid;
 
     useEffect(() => {
@@ -27,13 +47,13 @@ const ClientsMessagesInbox = () => {
             );
 
             const querySnapshot = await getDocs(q);
-            const chatList = [];
+            const chatList: ChatItem[] = [];
 
             for (const docSnap of querySnapshot.docs) {
-                const chatData = docSnap.data();
+                const chatData = docSnap.data() as DocumentData;
                 const chatId = docSnap.id;
                 const lastMessage = chatData.messages?.slice(-1)[0] || null;
-                const otherUserId = chatData.participants.find((id) => id !== userId);
+                const otherUserId = chatData.participants.find((id: string) => id !== userId);
 
                 if (otherUserId && !userInfos[otherUserId]) {
                     const userSnap = await getDoc(doc(db, "users", otherUserId));
@@ -58,7 +78,9 @@ const ClientsMessagesInbox = () => {
             }
 
             // Sort by most recent message
-            chatList.sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
+            chatList.sort(
+                (a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0)
+            );
             setChats(chatList);
         };
 
@@ -68,7 +90,7 @@ const ClientsMessagesInbox = () => {
     return (
         <>
             <PageMeta title="Messages" description="View your conversations with freelancers." />
-            <div className="">
+            <div>
                 <h1 className="text-xl font-semibold mb-4">Your Chats</h1>
 
                 {chats.length === 0 ? (
@@ -98,8 +120,9 @@ const ClientsMessagesInbox = () => {
                                         )}
 
                                         <div className="flex-1">
-                                            <p className="font-medium">{userInfo.name || "Loading..."}</p>
-
+                                            <p className="font-medium">
+                                                {userInfo.name || "Loading..."}
+                                            </p>
                                         </div>
 
                                         {chat.updatedAt && (
