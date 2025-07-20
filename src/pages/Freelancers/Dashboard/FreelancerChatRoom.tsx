@@ -123,7 +123,8 @@ const FreelancerChatRoom = () => {
 
             snapshot.forEach((docSnap) => {
                 const data = docSnap.data() as Message;
-                msgs.push({ id: docSnap.id, ...data });
+                msgs.push({ id: docSnap.id, ...(data as Omit<Message, "id">) });
+
 
                 const notSeen = !data.readBy || !data.readBy.includes(userId);
 

@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 
 // Define prop types
 type Props = {
-    userId: string;
+    // userId: string;
     jobId: string;
 };
 
