@@ -6,6 +6,15 @@ import EscrowPage from "./components/Escrow/EscrowPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import VerifyEmail from "./components/auth/VerifyEmail";
 
+//Admin pages
+import AdminLayout from "./layout/Admin/AdminLayout";
+import AdminDashboard from "./pages/Admin/AdminDashboard";
+import Jobs from "./pages/Admin/Jobs";
+import Users from "./pages/Admin/Users/Users";
+import Withdrawals from "./pages/Admin/Withdrawals";
+import UserDetails from "./pages/Admin/Users/UserDetails";
+import ReleasePayments from "./pages/Admin/ReleasePayments";
+
 // Freelancer Pages
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/Freelancers/AuthPages/SignUp";
@@ -19,6 +28,7 @@ import Messages from "./pages/Freelancers/Dashboard/Messages"; // Handles inbox 
 import LandingLayout from "./layout/LandingLayout";
 import ChooseDashboard from "./pages/ChooseDashboard";
 import AccountSettingsPage from "./pages/AccountSettingsPage";
+import WithdrawalsPage from "./pages/Freelancers/Dashboard/withdrawals/WithdrawalsPage";
 
 // Clients Pages
 import ClientsLayout from "./layout/clients/ClientsLayout";
@@ -106,7 +116,7 @@ export default function App() {
 
           {/* Freelancer Messages (Inbox + ChatRoom handled inside Messages) */}
           <Route path="messages/*" element={<Messages />} />
-
+          <Route path="withdrawals" element={<WithdrawalsPage />} />
           <Route path="profile" element={<UserProfiles />} />
           <Route path="calendar" element={<Calendar />} />
         </Route>
@@ -131,6 +141,27 @@ export default function App() {
           <Route path="client-profile" element={<ClientsProfile />} />
 
           <Route path="escrow/:jobId" element={<EscrowPage />} />
+        </Route>
+
+        {/* 🧑‍💼 Admin Protected Routes */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+
+          <Route index element={<AdminDashboard />} />
+          <Route path="jobs" element={<Jobs />} />
+          <Route path="users" element={<Users />} />
+          <Route path="withdrawals" element={<Withdrawals />} />
+          <Route path="release-payment" element={<ReleasePayments />} />
+          <Route path="/admin/users/:userId" element={<UserDetails />} />
+
+
+
         </Route>
 
         {/* 🚫 Not Found */}

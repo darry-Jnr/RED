@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom"; // ✅ Correct package
 
 import { FiBriefcase } from "react-icons/fi";
-import { FiMessageSquare } from "react-icons/fi";
+import { FiMessageSquare, FiSend } from "react-icons/fi";
 
 // Assume these icons are imported from an icon library
 import {
@@ -11,8 +11,6 @@ import {
   ChevronDownIcon,
   GridIcon,
   HorizontaLDots,
-
-  UserCircleIcon,
 } from "../../icons";
 import { useSidebar } from "../../context/SidebarContext";
 
@@ -46,9 +44,9 @@ const navItems: NavItem[] = [
     path: "/freelancer/calendar",
   },
   {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/freelancer/profile",
+    icon: <FiSend />,
+    name: "Withdrawls",
+    path: "/freelancer/withdrawals",
   },
 
 

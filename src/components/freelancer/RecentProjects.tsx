@@ -15,7 +15,7 @@ interface Project {
     category: string;
     budget: string;
     status: "Completed" | "In Progress" | "Canceled";
-    image: string;
+
 }
 
 // Sample data
@@ -27,7 +27,7 @@ const projectData: Project[] = [
         category: "Web Development",
         budget: "₦350,000",
         status: "Completed",
-        image: "/images/avatar/avatar-01.jpg",
+
     },
     {
         id: 2,
@@ -36,7 +36,7 @@ const projectData: Project[] = [
         category: "Graphic Design",
         budget: "₦85,000",
         status: "In Progress",
-        image: "/images/avatar/avatar-02.jpg",
+
     },
     {
         id: 3,
@@ -45,7 +45,7 @@ const projectData: Project[] = [
         category: "UI/UX Design",
         budget: "₦180,000",
         status: "Completed",
-        image: "/images/avatar/avatar-03.jpg",
+
     },
     {
         id: 4,
@@ -54,7 +54,7 @@ const projectData: Project[] = [
         category: "Marketing",
         budget: "₦120,000",
         status: "Canceled",
-        image: "/images/avatar/avatar-04.jpg",
+
     },
 ];
 
@@ -97,9 +97,6 @@ export default function RecentProjects() {
                             <TableRow key={project.id}>
                                 <TableCell className="py-3">
                                     <div className="flex items-center gap-3">
-                                        <div className="h-[40px] w-[40px] rounded-full overflow-hidden">
-                                            <img src={project.image} alt={project.client} />
-                                        </div>
                                         <div>
                                             <p className="text-theme-sm font-medium text-gray-800 dark:text-white/90">
                                                 {project.title}

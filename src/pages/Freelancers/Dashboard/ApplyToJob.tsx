@@ -1,6 +1,13 @@
-import { doc, setDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import {
+    doc,
+    setDoc,
+    collection,
+    addDoc,
+    serverTimestamp,
+    updateDoc,
+} from "firebase/firestore";
 import { auth, db } from "../../../firebase/firebaseConfig";
-
+import { arrayUnion } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
@@ -24,15 +31,19 @@ const ApplyToJob = ({ job }: { job: Job }) => {
         const chatId = participants.join("_");
 
         try {
-            // Create chat document
+            // 1. Create the chat document
             const chatRef = doc(db, "chats", chatId);
-            await setDoc(chatRef, {
-                participants,
-                createdAt: serverTimestamp(),
-                lastMessage: `Applied for: ${job.title}`,
-            }, { merge: true });
+            await setDoc(
+                chatRef,
+                {
+                    participants,
+                    createdAt: serverTimestamp(),
+                    lastMessage: `Applied for: ${job.title}`,
+                },
+                { merge: true }
+            );
 
-            // Add first message
+            // 2. Add the first message with job preview
             const messagesRef = collection(db, "chats", chatId, "messages");
             await addDoc(messagesRef, {
                 senderId: freelancer.uid,
@@ -43,6 +54,11 @@ const ApplyToJob = ({ job }: { job: Job }) => {
                     budget: job.budget,
                 },
                 createdAt: serverTimestamp(),
+            });
+
+            // ✅ 3. Update the job with the freelancerId who applied
+            await updateDoc(doc(db, "jobs", job.id), {
+                applicants: arrayUnion(freelancer.uid),
             });
 
             toast.success("Applied and chat started!");

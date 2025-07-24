@@ -18,7 +18,6 @@ import Input from "../../../components/form/input/InputField";
 import { FaArrowLeft, FaPlus, FaCheckDouble } from "react-icons/fa";
 import EscrowClient from "../../../components/Escrow/EscrowClient";
 
-// Define interfaces
 interface Message {
     id: string;
     senderId: string;
@@ -44,8 +43,7 @@ const ClientChatRoom = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState<string>("");
     const [chatPartner, setChatPartner] = useState<ChatPartner | null>(null);
-    const [setJobData] = useState<JobData | null>(null);
-    const [jobId, setJobId] = useState<string | null>(null);
+    const [jobData, setJobData] = useState<JobData | null>(null);
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
@@ -58,9 +56,13 @@ const ClientChatRoom = () => {
 
                 if (chatSnap.exists()) {
                     const chatData = chatSnap.data();
-                    setJobId(chatData.jobId || null);
-                } else {
-                    console.error("Chat document not found.");
+                    const jobId = chatData.jobId || null;
+                    if (jobId) {
+                        const jobSnap = await getDoc(doc(db, "jobs", jobId));
+                        if (jobSnap.exists()) {
+                            setJobData({ ...jobSnap.data(), id: jobId } as JobData);
+                        }
+                    }
                 }
             } catch (error) {
                 console.error("❌ Error fetching chat metadata:", error);
@@ -73,36 +75,35 @@ const ClientChatRoom = () => {
     useEffect(() => {
         if (!chatId || !userId) return;
 
-        const fetchMeta = async () => {
+        const fetchFreelancerMeta = async () => {
             try {
                 const chatSnap = await getDoc(doc(db, "chats", chatId));
                 const chatData = chatSnap.data();
 
                 if (!chatData) return;
 
-                const { clientId, freelancerId, jobId } = chatData;
-                const partnerId = clientId === userId ? freelancerId : clientId;
+                const partnerId = chatData.clientId === userId
+                    ? chatData.freelancerId
+                    : chatData.clientId;
 
                 const partnerSnap = await getDoc(doc(db, "users", partnerId));
                 if (partnerSnap.exists()) {
                     const pd = partnerSnap.data();
-                    setChatPartner({
-                        fullName: pd.fullName || "User",
-                        photoURL: pd.photoURL || "",
-                    });
-                }
-
-                const jobSnap = await getDoc(doc(db, "jobs", jobId));
-                if (jobSnap.exists()) {
-                    const jd = { ...jobSnap.data(), id: jobId };
-                    setJobData(jd as JobData);
+                    if (pd.fullName) {
+                        setChatPartner({
+                            fullName: pd.fullName,
+                            photoURL: pd.photoURL || "",
+                        });
+                    } else {
+                        console.warn("⚠️ Freelancer fullName is missing in DB");
+                    }
                 }
             } catch (err) {
-                console.error("❌ Error fetching chat metadata:", err);
+                console.error("❌ Error fetching freelancer metadata:", err);
             }
         };
 
-        fetchMeta();
+        fetchFreelancerMeta();
     }, [chatId, userId]);
 
     useEffect(() => {
@@ -114,10 +115,10 @@ const ClientChatRoom = () => {
         );
 
         const unsub = onSnapshot(q, (snapshot) => {
-            const msgs: Message[] = [];
-            snapshot.forEach((docSnap) =>
-                msgs.push({ ...(docSnap.data() as Message), id: docSnap.id })
-            );
+            const msgs: Message[] = snapshot.docs.map((docSnap) => ({
+                ...(docSnap.data() as Message),
+                id: docSnap.id,
+            }));
             setMessages(msgs);
             scrollToBottom();
         });
@@ -158,7 +159,7 @@ const ClientChatRoom = () => {
                         {chatPartner?.photoURL ? (
                             <img
                                 src={chatPartner.photoURL}
-                                alt="User"
+                                alt="Freelancer"
                                 className="w-9 h-9 rounded-full object-cover"
                             />
                         ) : (
@@ -167,16 +168,14 @@ const ClientChatRoom = () => {
                             </div>
                         )}
                         <div>
-                            <p className="font-medium text-gray-900">
-                                {chatPartner?.fullName}
-                            </p>
+                            <p className="font-medium text-gray-900">{chatPartner?.fullName || "Loading..."}</p>
                             <p className="text-sm text-green-500">Online</p>
                         </div>
                     </div>
 
-                    {jobId && (
+                    {jobData?.id && (
                         <div className="ml-auto">
-                            <EscrowClient jobId={jobId} />
+                            <EscrowClient jobId={jobData.id} />
                         </div>
                     )}
                 </div>
